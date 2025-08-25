@@ -18,6 +18,28 @@ export function OrderSummary({ bookingData, onSubmit }: OrderSummaryProps) {
   const grandTotal = kitTotal + servicesTotal;
 
   const handleSubmit = async () => {
+    // Frontend validation before sending request
+    if (!personalInfo.name.trim()) {
+      setSubmitError('Name is required');
+      return;
+    }
+    if (!personalInfo.email.trim()) {
+      setSubmitError('Email is required');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalInfo.email)) {
+      setSubmitError('Please enter a valid email address');
+      return;
+    }
+    if (!personalInfo.address.trim()) {
+      setSubmitError('Address is required');
+      return;
+    }
+    if (!personalInfo.phone.trim()) {
+      setSubmitError('Phone number is required');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -56,16 +78,20 @@ export function OrderSummary({ bookingData, onSubmit }: OrderSummaryProps) {
         {/* Personal Information */}
         <div className="p-6 border-b border-gray-200 bg-gray-50">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-gray-600">Name</p>
               <p className="font-semibold">{personalInfo.name}</p>
             </div>
             <div>
+              <p className="text-sm text-gray-600">Email</p>
+              <p className="font-semibold">{personalInfo.email}</p>
+            </div>
+            <div>
               <p className="text-sm text-gray-600">Phone</p>
               <p className="font-semibold">{personalInfo.phone}</p>
             </div>
-            <div className="md:col-span-2">
+            <div className="md:col-span-3">
               <p className="text-sm text-gray-600">Address</p>
               <p className="font-semibold">{personalInfo.address}</p>
             </div>

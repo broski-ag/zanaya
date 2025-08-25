@@ -34,6 +34,7 @@ export interface BookingData {
   selectedServices: Service[];
   personalInfo: {
     name: string;
+    email: string;
     address: string;
     phone: string;
   };

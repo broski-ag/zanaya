@@ -30,6 +30,7 @@ function App() {
     selectedServices: [],
     personalInfo: {
       name: '',
+      email: '',
       address: '',
       phone: ''
     }
@@ -87,6 +88,7 @@ function App() {
       case 1: return bookingData.selectedKitItems.length > 0;
       case 2: return true; // Services are optional
       case 3: return bookingData.personalInfo.name && bookingData.personalInfo.address && bookingData.personalInfo.phone;
+      case 3: return bookingData.personalInfo.name && bookingData.personalInfo.email && bookingData.personalInfo.address && bookingData.personalInfo.phone;
       case 4: return true;
       default: return false;
     }

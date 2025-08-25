@@ -58,6 +58,7 @@ const generateEmailHTML = (bookingData: BookingData) => {
           <h3>👤 Personal Details</h3>
           <div class="contact-info">
             <p><strong>Name:</strong> ${personalInfo.name}</p>
+            <p><strong>Email:</strong> ${personalInfo.email}</p>
             <p><strong>Phone:</strong> ${personalInfo.phone}</p>
             <p><strong>Address:</strong> ${personalInfo.address}</p>
           </div>
@@ -121,10 +122,40 @@ app.post('/api/submit-booking', async (req, res) => {
     const bookingData: BookingData = req.body;
 
     // Validate required fields
-    if (!bookingData.personalInfo.name || !bookingData.personalInfo.phone || !bookingData.personalInfo.address) {
+    if (!bookingData.personalInfo.name || !bookingData.personalInfo.name.trim()) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Missing required personal information' 
+        message: 'Name is required' 
+      });
+    }
+
+    if (!bookingData.personalInfo.email || !bookingData.personalInfo.email.trim()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email is required' 
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(bookingData.personalInfo.email)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please enter a valid email address' 
+      });
+    }
+
+    if (!bookingData.personalInfo.address || !bookingData.personalInfo.address.trim()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Address is required' 
+      });
+    }
+
+    if (!bookingData.personalInfo.phone || !bookingData.personalInfo.phone.trim()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Phone number is required' 
       });
     }
 
@@ -167,7 +198,7 @@ app.post('/api/submit-booking', async (req, res) => {
 
   } catch (error) {
     console.error('Error processing booking:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false, 
       message: 'Failed to process booking. Please try again.' 
     });

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { User, MapPin, Phone } from 'lucide-react';
+import { User, MapPin, Phone, Mail } from 'lucide-react';
 
 interface PersonalInfo {
   name: string;
+  email: string;
   address: string;
   phone: string;
 }
@@ -32,6 +33,12 @@ export function PersonalInfoForm({ personalInfo, onUpdate }: PersonalInfoFormPro
     
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
     }
     
     if (!formData.address.trim()) {
@@ -76,6 +83,27 @@ export function PersonalInfoForm({ personalInfo, onUpdate }: PersonalInfoFormPro
               />
             </div>
             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+          </div>
+
+          {/* Email Field */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address *
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="email"
+                id="email"
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                  errors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Enter your email address"
+              />
+            </div>
+            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
           </div>
 
           {/* Address Field */}
