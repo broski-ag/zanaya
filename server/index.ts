@@ -15,6 +15,12 @@ app.use(express.json());
 
 // Email transporter configuration
 const createTransporter = () => {
+  // Check if email configuration is available
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    console.warn('Warning: Email configuration not found. Email functionality will be disabled.');
+    return null;
+  }
+
   return nodemailer.createTransporter({
     service: 'gmail', // You can change this to your email provider
     auth: {
@@ -169,18 +175,29 @@ app.post('/api/submit-booking', async (req, res) => {
     // Create email transporter
     const transporter = createTransporter();
 
-    // Email content
-    const emailHTML = generateEmailHTML(bookingData);
-    
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER, // Send to admin email
-      subject: `New ZANAYA Booking - ${bookingData.personalInfo.name}`,
-      html: emailHTML,
-    };
+    // Send email only if transporter is available
+    if (transporter) {
+      try {
+        // Email content
+        const emailHTML = generateEmailHTML(bookingData);
+        
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER, // Send to admin email
+          subject: `New ZANAYA Booking - ${bookingData.personalInfo.name}`,
+          html: emailHTML,
+        };
 
-    // Send email
-    await transporter.sendMail(mailOptions);
+        // Send email
+        await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully');
+      } catch (emailError) {
+        console.error('Error sending email:', emailError);
+        // Don't fail the entire request if email fails
+      }
+    } else {
+      console.log('Email not configured - booking saved without email notification');
+    }
 
     // Log booking for debugging (in production, save to database)
     console.log('New booking received:', {
@@ -198,7 +215,7 @@ app.post('/api/submit-booking', async (req, res) => {
 
   } catch (error) {
     console.error('Error processing booking:', error);
-    return res.status(500).json({ 
+    res.status(500).json({ 
       success: false, 
       message: 'Failed to process booking. Please try again.' 
     });
@@ -211,5 +228,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ ZANAYA Backend Server running on port ${PORT}`);
+  console.log(`📧 Email configured: ${process.env.EMAIL_USER ? 'Yes' : 'No'}`);
+  console.log(`🔗 API endpoint: http://localhost:${PORT}/api`);
 });

@@ -52,7 +52,28 @@ export function OrderSummary({ bookingData, onSubmit }: OrderSummaryProps) {
         body: JSON.stringify(bookingData),
       });
 
-      const result = await response.json();
+      if (!response.ok) {
+        // Handle HTTP errors
+        let errorMessage = 'Failed to submit booking';
+        try {
+          const errorResult = await response.json();
+          errorMessage = errorResult.message || errorMessage;
+        } catch (parseError) {
+          // If we can't parse the error response, use a generic message
+          errorMessage = `Server error (${response.status})`;
+        }
+        setSubmitError(errorMessage);
+        return;
+      }
+
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        setSubmitError('Invalid response from server. Please try again.');
+        return;
+      }
 
       if (result.success) {
         onSubmit();
@@ -61,7 +82,11 @@ export function OrderSummary({ bookingData, onSubmit }: OrderSummaryProps) {
       }
     } catch (error) {
       console.error('Error submitting booking:', error);
-      setSubmitError('Network error. Please check your connection and try again.');
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        setSubmitError('Cannot connect to server. Please ensure the backend is running and try again.');
+      } else {
+        setSubmitError('Network error. Please check your connection and try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
