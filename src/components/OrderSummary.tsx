@@ -1,6 +1,6 @@
 import React from 'react';
 import { BookingData } from '../types';
-import { MessageCircle, Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 
 interface OrderSummaryProps {
   bookingData: BookingData;
@@ -8,54 +8,41 @@ interface OrderSummaryProps {
 }
 
 export function OrderSummary({ bookingData, onSubmit }: OrderSummaryProps) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+
   const { religion, selectedKitItems, selectedServices, personalInfo } = bookingData;
   
   const kitTotal = selectedKitItems.reduce((sum, item) => sum + item.price, 0);
   const servicesTotal = selectedServices.reduce((sum, service) => sum + service.price, 0);
   const grandTotal = kitTotal + servicesTotal;
 
-  const generateWhatsAppMessage = () => {
-    let message = `🙏 *ZANAYA - LAST RITES SERVICE BOOKING*\n\n`;
-    
-    // Personal Information
-    message += `👤 *Personal Details:*\n`;
-    message += `Name: ${personalInfo.name}\n`;
-    message += `Phone: ${personalInfo.phone}\n`;
-    message += `Address: ${personalInfo.address}\n\n`;
-    
-    // Religion
-    message += `🕉️ *Religion:* ${religion?.name}\n\n`;
-    
-    // Kit Items
-    if (selectedKitItems.length > 0) {
-      message += `📦 *Selected Kit Items:*\n`;
-      selectedKitItems.forEach(item => {
-        message += `• ${item.name} - ₹${item.price}\n`;
-      });
-      message += `*Kit Subtotal: ₹${kitTotal}*\n\n`;
-    }
-    
-    // Services
-    if (selectedServices.length > 0) {
-      message += `🔧 *Additional Services:*\n`;
-      selectedServices.forEach(service => {
-        message += `• ${service.name} - ₹${service.price}\n`;
-      });
-      message += `*Services Subtotal: ₹${servicesTotal}*\n\n`;
-    }
-    
-    // Total
-    message += `💰 *GRAND TOTAL: ₹${grandTotal}*\n\n`;
-    message += `Please confirm this booking and provide further instructions. Thank you.`;
-    
-    return encodeURIComponent(message);
-  };
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-  const handleWhatsAppSubmit = () => {
-    const message = generateWhatsAppMessage();
-    const whatsappUrl = `https://wa.me/918273441052?text=${message}`;
-    window.open(whatsappUrl, '_blank');
-    onSubmit();
+    try {
+      const response = await fetch('/api/submit-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        onSubmit();
+      } else {
+        setSubmitError(result.message || 'Failed to submit booking');
+      }
+    } catch (error) {
+      console.error('Error submitting booking:', error);
+      setSubmitError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -164,15 +151,27 @@ export function OrderSummary({ bookingData, onSubmit }: OrderSummaryProps) {
 
         {/* Submit Button */}
         <div className="p-6">
+          {submitError && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800 text-sm">{submitError}</p>
+            </div>
+          )}
           <button
-            onClick={handleWhatsAppSubmit}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-300 flex items-center justify-center gap-3 text-lg"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-300 flex items-center justify-center gap-3 text-lg"
           >
-            <MessageCircle size={24} />
-            Submit via WhatsApp
+            {isSubmitting ? (
+              <>
+                <Loader2 size={24} className="animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              'Submit'
+            )}
           </button>
           <p className="text-center text-sm text-gray-600 mt-3">
-            This will open WhatsApp with your booking details pre-filled
+            Your booking will be submitted and you'll receive a confirmation shortly
           </p>
         </div>
       </div>
